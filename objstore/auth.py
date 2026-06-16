@@ -40,8 +40,11 @@ def sha256_hex(data: bytes) -> str:
 def authenticate_request(handler: BaseHTTPRequestHandler,
                          meta: MetadataStore) -> Tenant:
     auth_header = handler.headers.get("Authorization", "")
-    date_header = handler.headers.get("X-ObjStore-Date", "")
-    content_hash_header = handler.headers.get("X-ObjStore-Content-Sha256", "")
+    date_header = handler.headers.get("X-ObjStore-Date",
+                  handler.headers.get("X-Date", ""))
+    content_hash_header = handler.headers.get("X-ObjStore-Content-Sha256",
+                          handler.headers.get("X-Content-SHA256",
+                          handler.headers.get("X-Content-Sha256", "")))
 
     if not auth_header or not date_header:
         raise AuthError("Missing Authorization or X-ObjStore-Date header")

@@ -73,6 +73,10 @@ class DataStore:
         f = open(path, "rb")
         return f, size
 
+    def object_exists(self, tenant_id: str, bucket_name: str, object_id: str) -> bool:
+        path = self._object_path(tenant_id, bucket_name, object_id)
+        return os.path.exists(path)
+
     def delete_object(self, tenant_id: str, bucket_name: str, object_id: str) -> bool:
         path = self._object_path(tenant_id, bucket_name, object_id)
         if os.path.exists(path):
@@ -111,6 +115,18 @@ class DataStore:
         os.replace(tmp_path, path)
         return written, md5.hexdigest()
 
+    def get_part_size(self, tenant_id: str, bucket_name: str,
+                      upload_id: str, part_number: int) -> Optional[int]:
+        path = self._part_path(tenant_id, bucket_name, upload_id, part_number)
+        if not os.path.exists(path):
+            return None
+        return os.path.getsize(path)
+
+    def part_exists(self, tenant_id: str, bucket_name: str,
+                    upload_id: str, part_number: int) -> bool:
+        path = self._part_path(tenant_id, bucket_name, upload_id, part_number)
+        return os.path.exists(path)
+
     def merge_parts(self, tenant_id: str, bucket_name: str,
                     upload_id: str, object_id: str,
                     part_numbers: list) -> Tuple[int, str]:
@@ -132,7 +148,6 @@ class DataStore:
                         out.write(chunk)
                         total_size += len(chunk)
         os.replace(tmp_path, final_path)
-        shutil.rmtree(upload_dir, ignore_errors=True)
         return total_size, sha256.hexdigest()
 
     def cleanup_parts(self, tenant_id: str, bucket_name: str, upload_id: str):
@@ -144,3 +159,8 @@ class DataStore:
         bucket_dir = os.path.join(self._data_dir, tenant_id, bucket_name)
         if os.path.exists(bucket_dir):
             shutil.rmtree(bucket_dir)
+
+    def cleanup_object_files(self, tenant_id: str, bucket_name: str,
+                             object_ids: list):
+        for oid in object_ids:
+            self.delete_object(tenant_id, bucket_name, oid)

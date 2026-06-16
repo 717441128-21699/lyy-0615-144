@@ -61,6 +61,8 @@ def main():
     ObjStoreHandler.storage = storage
     ObjStoreHandler.quota = quota_mgr
 
+    admin = create_tenant(meta, "admin", quota_bytes=100 * 1024 * 1024 * 1024)
+    ObjStoreHandler.admin_tenant_id = admin.tenant_id
     tenant1 = create_tenant(meta, "tenant-a", quota_bytes=100 * 1024 * 1024)
     tenant2 = create_tenant(meta, "tenant-b", quota_bytes=200 * 1024 * 1024)
 
@@ -81,9 +83,31 @@ def main():
     print("    POST /<bucket>/<key>?uploadId=X - Complete multipart upload")
     print("    DEL  /<bucket>/<key>?uploadId=X - Abort multipart upload")
     print("    GET  /<bucket>?quota            - Get quota usage")
+    print("    PUT  /<bucket>?acl              - Set bucket ACL")
+    print("    GET  /<bucket>?acl              - Get bucket ACL")
+    print("    PUT  /<bucket>?grant            - Add bucket grant (READ/WRITE)")
+    print("    DEL  /<bucket>?grant            - Remove bucket grant")
+    print("    PUT  /<bucket>/<key>?acl        - Set object ACL")
+    print("    GET  /<bucket>/<key>?acl        - Get object ACL")
+    print("    PUT  /<bucket>/<key>?grant      - Add object grant")
+    print("    DEL  /<bucket>/<key>?grant      - Remove object grant")
+    print("    GET  /<bucket>/<key>?uploadId=X - List parts")
+    print()
+    print("  Admin Endpoints (tenant=admin):")
+    print("    GET  /_admin/tenants            - List all tenants with real usage")
+    print("    GET  /_admin/tenant/<id>        - Real usage breakdown")
+    print("    GET  /_admin/expired-multipart  - List expired multipart uploads")
+    print("    POST /_admin/cleanup-multipart  - Clean up expired multipart uploads")
+    print("    POST /_admin/recalculate-quota  - Recalculate and fix all tenant quotas")
+    print("    POST /_admin/tenant/<id>        - Recalculate quota for a single tenant")
     print()
 
     credentials = {
+        admin.tenant_id: {
+            "access_key": admin.access_key,
+            "secret_key": admin.secret_key,
+            "is_admin": True,
+        },
         tenant1.tenant_id: {
             "access_key": tenant1.access_key,
             "secret_key": tenant1.secret_key,

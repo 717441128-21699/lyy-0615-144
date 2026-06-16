@@ -48,3 +48,13 @@ class MultipartPart:
     size: int = 0
     etag: str = ""
     created_at: float = field(default_factory=time.time)
+
+
+@dataclass
+class Grant:
+    resource_type: str
+    resource_name: str
+    owner_tenant_id: str
+    grantee_tenant_id: str
+    permission: str
+    granted_at: float = field(default_factory=time.time)
